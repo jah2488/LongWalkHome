@@ -1,12 +1,12 @@
 package
 {
+	import com.jah2488.*;
+	
 	import flash.events.Event;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	
 	import flashx.textLayout.formats.Float;
-	
-	import com.jah2488.*;
 	
 	import org.flixel.*;
 	import org.flixel.plugin.photonstorm.*;
@@ -19,7 +19,7 @@ package
 		[Embed(source = './assets/images/hammerIcon.png')] public var HammerImage:Class;
 		[Embed(source = './assets/images/booticon.png')]   public var JetImage:Class;
 		[Embed(source = './assets/images/jetFlame.png')]   public var JetFlame:Class;
-		
+		[Embed(source = './assets/images/rain.png')]       public var RainImage:Class;
 				
 		private var _level:LevelOne;
 		
@@ -48,6 +48,7 @@ package
 		public var depleteCounter:Number = 0;
 		
 		public var emitter:FlxEmitter;
+		public var Remitter:FlxEmitter;
 		
 		public static var spritesLayer:FlxGroup;
 		public static var stageLayer:FlxGroup;
@@ -140,6 +141,13 @@ package
 			emitter.makeParticles(JetFlame, 1000);
 			emitter.lifespan = 200;
 			emitter.gravity = 600;
+
+			Remitter = new FlxEmitter((FlxG.width / 2),0); //x and y of the emitter
+			Remitter.makeParticles(RainImage, 100,0,false,1);
+			Remitter.lifespan         = 300;
+			Remitter.gravity          = 300;
+			Remitter.maxRotation      = 0;
+			Remitter.maxParticleSpeed = new FlxPoint(70,70);
 			
 			addItem();
 			
@@ -153,6 +161,7 @@ package
 			
 			add(light);
 			add(flashlight);
+			add(Remitter);
 			add(darkness);
 			add(emitter);
 			add(lightMeter);
@@ -169,7 +178,7 @@ package
 			add(scoreText);
 			
 			emitter.start(false);
-			Registry._player.hasJet = true;
+			Remitter.start(false);
 		}
 		
 		override public function draw():void {

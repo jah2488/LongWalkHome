@@ -14,6 +14,8 @@ package com.jah2488
 		override public function update():void
 		{
 			if(this.overlaps(Registry._player)){
+				this.pickup();
+
 				FlxG.log("Gotcha!");
 				FlxG.score += 100;
 				Registry._player.hasHammer = true;

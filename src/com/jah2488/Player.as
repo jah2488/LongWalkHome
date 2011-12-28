@@ -6,7 +6,9 @@ package com.jah2488
 	public class Player extends FlxSprite
 	{
 		[Embed(source = './assets/images/player1.png')] public var PlayerImage:Class;
-
+		[Embed(source = './assets/sounds/jump.mp3')] public var PlayerJump:Class;
+		[Embed(source = './assets/sounds/jet.mp3')]     public var JetSound:Class;
+		
 		// Player Specific Variables // 
 		private var _move_speed:int = 100;
 		private var _jump_power:int = 800;   
@@ -76,6 +78,8 @@ package com.jah2488
 			if(meter < 0){ meter = 0; }
 			if(meter > maxMeter){ meter  = maxMeter;}
 			
+			if(FlxG.keys.justPressed('W')){ FlxG.play(PlayerJump);}
+			
 			if(touching == FlxObject.FLOOR)
 			{
 				if(velocity.x != 0)
@@ -84,14 +88,44 @@ package com.jah2488
 				}
 			}
 
-			FlxG.watch(this.velocity,"x","xVelocity");
-			FlxG.watch(this,"frame","frame");
+
+
 			if( FlxG.keys.justReleased('SPACE'))
 			{
-				useItem();
+				if( activeItem == 0 ) {
+					FlxG.log("No Item Selected");
+				}
+				else( activeItem == 1 )
+				{
+					FlxG.log("Use Hammer!");
+					play("fighting");
+					if( hasHammer == true )
+					{
+						swingHammer();
+					}
+					else 
+					{
+						FlxG.log("oh snap, you dont have the hammer");
+					}
+				}
 			}else{
 				play("fighting");
 				swingingHammer = false;
+			}
+			if( FlxG.keys.pressed('SPACE'))
+			{
+				if( activeItem == 2 )
+				{
+					FlxG.log("Use Jet Boots!");
+					if( hasJet == true )
+					{
+						boostUpwards();
+					}
+					else
+					{
+						FlxG.log("Oh shit son, you have no jet boots.");
+					}
+				}
 			}
 			
 			if( hasBoots == true) {
@@ -107,8 +141,6 @@ package com.jah2488
 					jumpHeight  = 100;
 				} 
 			}
-			
-			
 			FlxControl.player1.setMovementSpeed(400, 0, playerSpeed, 200, 400, 0);
 			
 			if (FlxControl.player1.isPressedRight || FlxControl.player1.isPressedLeft){
@@ -121,38 +153,7 @@ package com.jah2488
 				this.frame = 3;
 			}
 		}
-		private function useItem():void
-		{
-			if( activeItem == 0 ) {
-				FlxG.log("No Item Selected");
-			}
-			else if( activeItem == 1 )
-			{
-				FlxG.log("Use Hammer!");
-				play("fighting");
-				if( hasHammer == true )
-				{
-					swingHammer();
-				}
-				else 
-				{
-					FlxG.log("oh snap, you dont have the hammer");
-				}
-			}
-			else if( activeItem == 2 )
-			{
-				FlxG.log("Use Jet Boots!");
-				if( hasJet == true )
-				{
-					boostUpwards();
-				}
-				else
-				{
-					FlxG.log("Oh shit son, you have no jet boots.");
-				}
-			}
-		}
-		
+
 		private function swingHammer():void
 		{
 			swingingHammer = true;
@@ -162,6 +163,7 @@ package com.jah2488
 			if( meter > 0 )
 			{
 				flying = true;
+				FlxG.play(JetSound,0.2);
 				velocity.y = -70;
 				this.meter += -1;
 			} else {

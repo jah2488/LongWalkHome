@@ -7,6 +7,7 @@ package com.jah2488
 	{
 		[Embed(source = './assets/images/breakableBlock.png')] public var BreakableBlockImageClass:Class;
 		[Embed(source = './assets/images/break.png')] public var BrickImageClass:Class;
+		[Embed(source = './assets/sounds/hit.mp3')] public var HitSound:Class;
 
 		public var emitter:FlxEmitter;
 		
@@ -16,19 +17,11 @@ package com.jah2488
 			
 			loadGraphic(BreakableBlockImageClass,false,false,8,8);
 			
-			this.health = 10;
+			this.health    = 5;
 			this.immovable = true;
 			this.solid     = true;
 			
 			emitter = new FlxEmitter(0,0,100);
-//			var particles:int = 5;
-//			
-//			for(var i:int = 0; i < particles; i++)
-//			{
-//				var particle:FlxSprite = new FlxSprite();
-//				particle.loadGraphic(BreakableBlockImageClass,false,false,2,2);
-//				emitter.add(particle);
-//			}
 			emitter.makeParticles(BrickImageClass,8);
 			emitter.bounce = 1;
 			emitter.gravity = 300;
@@ -39,7 +32,6 @@ package com.jah2488
 		override public function update():void
 		{
 			super.update();
-			FlxG.watch(emitter, "alive", "alive");
 			if(this.overlaps(Registry._player))
 			{
 			
@@ -51,7 +43,7 @@ package com.jah2488
 						FlxG.score += 5;
 						Registry._player.play('fighting');
 						shake();
-						Registry.fx.explodeBlock(Registry._player.x,Registry._player.y);
+						FlxG.play(HitSound);
 						this.hurt(1);	
 					}
 					

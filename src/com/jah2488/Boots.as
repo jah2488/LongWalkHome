@@ -15,6 +15,8 @@ package com.jah2488
 		override public function update():void
 		{
 			if(this.overlaps(Registry._player)){
+				this.pickup();
+
 				FlxG.log("Gotcha!");
 				Registry._player.hasBoots = true;
 				this.kill();
