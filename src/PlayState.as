@@ -23,6 +23,8 @@ package
 				
 		private var _level:LevelOne;
 		
+		private var isPaused:Boolean = false;
+		
 		private var _map:FlxTilemap;
 		private var itemGroup:FlxGroup;
 		
@@ -51,6 +53,7 @@ package
 		public var Remitter:FlxEmitter;
 		
 		public static var spritesLayer:FlxGroup;
+		public static var lightsLayer:FlxGroup;
 		public static var stageLayer:FlxGroup;
 		public static var hudLayer:FlxGroup;
 		public static var shootLayer:FlxGroup;
@@ -70,6 +73,7 @@ package
 			
 			spritesLayer = new FlxGroup;
 			stageLayer   = new FlxGroup;
+			lightsLayer  = new FlxGroup;
 			hudLayer     = new FlxGroup;
 			shootLayer   = new FlxGroup;
 			enemyLayer   = new FlxGroup;
@@ -138,17 +142,29 @@ package
 			scoreText.scrollFactor.x = scoreText.scrollFactor.y = 0;			
 			
 			emitter = new FlxEmitter(-1000,-1000); //x and y of the emitter
-			emitter.makeParticles(JetFlame, 1000);
+			emitter.makeParticles(JetFlame, 1,4,true,1);
 			emitter.lifespan = 200;
 			emitter.gravity = 600;
+			emitter.maxRotation = 0;
+			emitter.frequency = 1;
+			emitter.setXSpeed(-20,20);
+			emitter.setYSpeed(0,100);
+			emitter.setSize( (Registry._player.width / 2),2);
 
-			Remitter = new FlxEmitter((FlxG.width / 2),0); //x and y of the emitter
-			Remitter.makeParticles(RainImage, 100,0,false,1);
+			Remitter = new FlxEmitter(0,0); //x and y of the emitter
+			Remitter.makeParticles(RainImage,1000,0,false,1);
 			Remitter.lifespan         = 300;
+			Remitter.frequency        = 5000;
 			Remitter.gravity          = 300;
-			Remitter.maxRotation      = 0;
+			Remitter.setRotation(0,0);
 			Remitter.maxParticleSpeed = new FlxPoint(70,70);
+			Remitter.setSize( (FlxG.width), 2);
+			Remitter.setXSpeed(-1,1);
 			
+			var text:TextBox = new TextBox(FlxG.height * .9,Registry._player.y,"hello there! How are you?");
+			var dialog:FlxDialog = new FlxDialog( ( (FlxG.width / 2) - 150), (FlxG.height - 72),310,72,0.05 );
+			var textArray:Array = ["This is my first entry in my array \n"];
+			dialog.showDialog(textArray);
 			addItem();
 			
 			add(background2);
@@ -157,13 +173,16 @@ package
 			add(Registry._player);
 			add(spritesLayer);
 			
-			
+			add(text);
+			add(dialog);
 			
 			add(light);
 			add(flashlight);
-			add(Remitter);
-			add(darkness);
+			add(lightsLayer);
+//			add(darkness);
 			add(emitter);
+			add(Remitter);
+
 			add(lightMeter);
 			add(lightMeterText);
 			
@@ -180,7 +199,6 @@ package
 			emitter.start(false);
 			Remitter.start(false);
 		}
-		
 		override public function draw():void {
 			darkness.fill(0xff000000);
 			super.draw();
@@ -188,42 +206,40 @@ package
 		
 		override public function update():void
 		{
-			super.update();
-			
-			if(FlxG.score >= 5000)
+			if(isPaused == true)
 			{
-				FlxG.switchState(new WinState);
-			}
-			
-			if(Registry._player.hasHeart == true)
-			{
-				FlxG.switchState(new WinState);
-			}
-			
-			
+				if(FlxG.keys.justReleased('P') == true){isPaused = false;}
+				debugLogandWatch();			
+
+			} else {
+				if(FlxG.keys.justReleased('P') == true){isPaused = true;}
+				super.update();
+				
+				Remitter.x = (Registry._player.x - (FlxG.width /2))
+				
+				checkWinConditions();
+				updateHUD();
+				updateLightSource();
+				
+				if(Registry._player.flying == true){ emitter.x = Registry._player.x; emitter.y = Registry._player.y;} else { emitter.x = emitter.y = -1000;}
+				
+				FlxG.collide(Registry._player, _level);
+				FlxG.collide(_level,spritesLayer);
+				FlxG.collide(Registry._player,spritesLayer);	
+				debugLogandWatch();	
+			}			
+		}
+		private function debugLogandWatch():void
+		{
+			FlxG.watch(PlayState,"isPaused","paused");
+			FlxG.watch(Registry._player, "x", "x");
+			FlxG.watch(Registry._player,"y","y");
+			FlxG.watch(Registry._player,"meter","meter");
+		}
+		private function updateHUD():void
+		{
 			lightMeterText.text = Registry._player.meter.toString();
 			scoreText.text = FlxG.score.toString();
-			
-			if(light.x < Registry._player.x - 5)
-			{
-				light.x += 1;
-			}
-			if(light.x > Registry._player.x - 5)
-			{
-				light.x -= 1;
-			}
-			if(light.y < Registry._player.y - 10)
-			{
-				light.y += 2;
-			}
-			if(light.y > Registry._player.y - 10)
-			{
-				light.y -= 2;
-			}
-			//			light.x = Registry._player.x + 5;
-			//			light.y = Registry._player.y -10;
-			
-			
 			if(FlxG.keys.ONE == true) 
 			{
 				if(Registry._player.hasHammer == true)
@@ -244,8 +260,40 @@ package
 			}
 			if(Registry._player.activeItem == 1) { item1HUD.play("active");item2HUD.play("inactive");}
 			if(Registry._player.activeItem == 2) { item2HUD.play("active");item1HUD.play("inactive");}
-			if(Registry._player.flying == true){ emitter.x = Registry._player.x; emitter.y = Registry._player.y;} else { emitter.x = emitter.y = -1000;}
+		}
+		private function checkWinConditions():void
+		{
+			if(FlxG.score >= 5000)
+			{
+				FlxG.switchState(new WinState);
+			}
 			
+			if(Registry._player.hasHeart == true)
+			{
+				FlxG.switchState(new WinState);
+			}
+		}
+		private function updateLightSource():void
+		{
+			//Bobbing Light Follow Controls
+			if(light.x < Registry._player.x - 5)
+			{
+				light.x += 3;
+			}
+			if(light.x > Registry._player.x - 5)
+			{
+				light.x -= 3;
+			}
+			if(light.y < Registry._player.y - 10)
+			{
+				light.y += 3;
+			}
+			if(light.y > Registry._player.y - 10)
+			{
+				light.y -= 3;
+			}
+			
+			//Flashlight Controls and Flashlight Meter Functions
 			if(FlxG.keys.SHIFT)
 			{
 				if (Registry._player.meter >= 5)
@@ -297,14 +345,7 @@ package
 			var meterRefill:Number;
 			meterRefill = (1 + FlxG.elapsed) * .25;
 			Registry._player.meter += (1 + FlxG.elapsed) * .25;
-			FlxG.watch(Registry._player, "x", "x");
-			FlxG.watch(Registry._player,"y","y");
-			FlxG.watch(Registry._player,"meter","meter");
-			FlxG.collide(Registry._player, _level);
-			FlxG.collide(Registry._player,spritesLayer);
-			
 		}
-		
 		public function addItem():void
 		{ 
 			FlxG.log("Add Items Called");
@@ -352,6 +393,8 @@ package
 			{
 				FlxG.log(keyValue.x + "," + keyValue.y);
 				_level.map.setTile(keyValue.x,keyValue.y,0);
+				var newLight:Lighting = new Lighting(keyValue.x,keyValue.y, darkness, 'tiny')
+				lightsLayer.add(newLight);
 				spritesLayer.add(new Key(keyValue.x-8,keyValue.y-8));
 			}
 			for each ( var blockValue:* in breakTile)

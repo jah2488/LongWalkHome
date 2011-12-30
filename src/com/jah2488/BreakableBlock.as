@@ -2,6 +2,7 @@ package com.jah2488
 {
 	import org.flixel.*;
 	import org.flixel.FlxSprite;
+	import org.flixel.plugin.photonstorm.FlxDelay;
 	
 	public class BreakableBlock extends FlxSprite
 	{
@@ -22,7 +23,7 @@ package com.jah2488
 			this.solid     = true;
 			
 			emitter = new FlxEmitter(0,0,100);
-			emitter.makeParticles(BrickImageClass,8);
+			emitter.makeParticles(BrickImageClass,5);
 			emitter.bounce = 1;
 			emitter.gravity = 300;
 			emitter.lifespan = 200;
@@ -34,19 +35,20 @@ package com.jah2488
 			super.update();
 			if(this.overlaps(Registry._player))
 			{
-			
-				if(Registry._player.hasHammer == true)
-				{
-					if(Registry._player.swingingHammer == true)
+				if(Registry._player.activeItem == 1) {
+					if(Registry._player.hasHammer == true)
 					{
-						emitter.start(true);
-						FlxG.score += 5;
-						Registry._player.play('fighting');
-						shake();
-						FlxG.play(HitSound);
-						this.hurt(1);	
+						if(Registry._player.swingingHammer == true)
+						{
+							emitter.start(true);
+							FlxG.score += 5;
+							Registry._player.play('fighting');
+							shake();
+							FlxG.play(HitSound);
+							this.hurt(1);	
+						}
+						
 					}
-					
 				}
 			}
 			emitter.update();
@@ -64,8 +66,8 @@ package com.jah2488
 		}
 		override public function kill():void
 		{
+			emitter.start(true);
 			shake();
-			emitter.replace(this,emitter);
 			super.kill();
 		}
 	}
